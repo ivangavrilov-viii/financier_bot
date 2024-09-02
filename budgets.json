@@ -1,0 +1,37 @@
+[
+  {
+    "id": 0,
+    "start_date": "",
+    "end_date": "",
+    "budget": 0.0,
+    "daily_budget": 0.0,
+    "expenses": [
+      {
+        "id": 0,
+        "date": "",
+        "price": 0.0,
+        "comment": ""
+      },
+      {
+        "id": 1,
+        "date": "",
+        "price": 0.0,
+        "comment": ""
+      }
+    ],
+    "profits": [
+      {
+        "id": 0,
+        "date": "",
+        "price": 0.0,
+        "comment": ""
+      },
+      {
+        "id": 1,
+        "date": "",
+        "price": 0.0,
+        "comment": ""
+      }
+    ]
+  }
+]

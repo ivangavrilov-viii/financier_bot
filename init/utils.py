@@ -28,3 +28,16 @@ def get_days_count(start_date, end_date) -> list:
     end_date_str = end_date.strftime('%d.%m.%Y')
 
     return [start_date_str, end_date_str, days]
+
+
+def get_budget_info(chat_id, start_date, end_date, budget) -> bool:
+    """ SET BUDGET FOR USER IN DB """
+
+    budget_info = {
+        "days": (end_date - start_date).days + 1,
+        "daily_budget": budget / days,
+        "start_date_str": start_date.strftime('%d.%m.%Y'),
+        "end_date_str": end_date.strftime('%d.%m.%Y')
+    }
+
+    return budget_info

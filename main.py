@@ -75,10 +75,11 @@ def set_budget(message: Message, start_date, end_date) -> None:
     budget = message.text
     chat_id = message.chat.id
 
-    print(start_date)
-    print(end_date)
-    print(budget)
-
+    if budget.isdigit() and float(budget) > 0.0:
+        db.save_budget(chat_id, start_date, end_date, float(budget))
+    else:
+        bot.send_message(chat_id, mes.wrong_budget(), parse_mode="Markdown")
+        bot.register_next_step_handler(message, set_budget, start_date, end_date)
 
 #     elif message.text == '/set_budget':
 #         bot.send_message(message.chat.id, input_budget())

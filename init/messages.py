@@ -38,3 +38,7 @@ def wrong_date() -> str:
 
 def wrong_date_early() -> str:
     return f"Введенная дата не может быть меньше даты начала периода\nПопробуйте ввести дату заново:"
+
+
+def wrong_budget() -> str:
+    return f"Вы ввели некорректную сумму.\nПопробуйе еще раз"

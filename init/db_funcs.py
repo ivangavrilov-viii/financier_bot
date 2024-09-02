@@ -70,36 +70,10 @@ def save_sport_for_user(chat_id, sport):
     )
 
 
-def save_school_for_user(chat_id, school_id):
-    return update_in_db(
-        f"UPDATE users SET school_id={school_id} WHERE chat_id={chat_id}",
-        None,
-        f"ERROR | Error with update school_id for user(#{chat_id})"
-    )
+def save_budget(chat_id, start_date, end_date, budget):
+    """ SAVE BUDGET AND DATES FOR USER IN DB """
 
-
-def save_corpus_for_user(chat_id, corpus_id):
-    return update_in_db(
-        f"UPDATE users SET corpus_id={corpus_id} WHERE chat_id={chat_id}",
-        None,
-        f"ERROR | Error with update corpus_id for user(#{chat_id})"
-    )
-
-
-def save_phone_number(chat_id, phone_number):
-    return update_in_db(
-        f"UPDATE users SET phone={phone_number} WHERE chat_id={chat_id}",
-        None,
-        f"ERROR | Error with update phone for user(#{chat_id})"
-    )
-
-
-def save_role_for_user(chat_id, role):
-    return update_in_db(
-        f"UPDATE users SET role='{role}' WHERE chat_id={chat_id}",
-        None,
-        f"ERROR | Error with update role for user(#{chat_id})"
-    )
+    budget_info = u.get_budget_info(chat_id, start_date, end_date, budget)
 
 
 def user_in_db(user_id):
@@ -109,22 +83,6 @@ def user_in_db(user_id):
         database = sqlite3.connect(DB_NAME)
         cursor = database.cursor()
         cursor.execute(f"SELECT * FROM users WHERE chat_id={user_id}")
-        response = cursor.fetchall()
-        cursor.close()
-        if response and response[0]:
-            return u.user_to_json(response[0])
-    except sqlite3.Error as error:
-        logger.error(f'Error with checking user in DB: {error}')
-    return False
-
-
-def user_in_db_by_username(username):
-    """ CHECK USER IN DB BY username """
-
-    try:
-        database = sqlite3.connect(DB_NAME)
-        cursor = database.cursor()
-        cursor.execute(f"SELECT * FROM users WHERE username='{username}'")
         response = cursor.fetchall()
         cursor.close()
         if response and response[0]:

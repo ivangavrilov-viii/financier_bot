@@ -2,6 +2,8 @@ from telebot.types import Chat
 from datetime import datetime
 
 
+
+
 class BotUser:
     """ Класс: Пользователь Телеграм-бота. """
 

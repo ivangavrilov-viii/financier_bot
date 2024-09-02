@@ -1,0 +1,10 @@
+.env
+
+venv/
+.init/
+.idea/
+
+*.db
+*.log
+
+.DS_Store

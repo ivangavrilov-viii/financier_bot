@@ -28,6 +28,9 @@ def start(message: Message) -> None:
     elif message.text == '/set_budget':
         bot.send_message(chat_id, mes.input_start_date(), parse_mode="Markdown")
         bot.register_next_step_handler(message, set_start_date)
+    elif message.text == '/balance':
+        user = db.user_in_db(chat_id)
+        bot.send_message(chat_id, mes.balance_message(user), parse_mode="Markdown")
     else:
         bot.send_message(chat_id, mes.function_list(), parse_mode="Markdown")
 
@@ -76,19 +79,18 @@ def set_budget(message: Message, start_date, end_date) -> None:
     chat_id = message.chat.id
 
     if budget.isdigit() and float(budget) > 0.0:
-        db.save_budget(chat_id, start_date, end_date, float(budget))
+        user = db.user_in_db(chat_id)
+        save_new_budget = db.save_budget(chat_id, user, start_date, end_date, float(budget))
+        if save_new_budget:
+            user = db.user_in_db(chat_id)
+            bot.send_message(chat_id, mes.success_save_budget(user), parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, mes.wrong_save_budget(), parse_mode="Markdown")
     else:
         bot.send_message(chat_id, mes.wrong_budget(), parse_mode="Markdown")
         bot.register_next_step_handler(message, set_budget, start_date, end_date)
 
-#     elif message.text == '/set_budget':
-#         bot.send_message(message.chat.id, input_budget())
-#         bot.register_next_step_handler(message, set_budget)
-#     elif message.text == '/balance':
-#         user = users_dict[message.chat.id]
-#         user.show_balance()
-#         today = datetime.strftime(datetime.now().date(), "%d.%m.%Y")
-#         bot.send_message(message.chat.id, show_balance_msg(user.period_budget, user.day_budget, today, user.end_period_date))
+
 #     elif message.text == '/add_expenses':
 #         if users_dict[message.chat.id].period_budget != 0 and users_dict[message.chat.id].period_budget:
 #             bot.send_message(message.chat.id, add_expenses_msg())
@@ -104,20 +106,6 @@ def set_budget(message: Message, start_date, end_date) -> None:
 #         bot.send_message(message.chat.id, user.period_history())
 #     else:
 #         bot.send_message(message.chat.id, function_list())
-#
-#
-# def set_budget(message: Message) -> None:
-#     budget_value = message.text
-#     user_id = message.chat.id
-#
-#     try:
-#         users_dict[user_id].period_budget = float(budget_value)
-#         bot.send_message(user_id, input_start_period())
-#         bot.register_next_step_handler(message, set_start_period)
-#     except Exception as error:
-#         logger.error(f"Wrong input budget value = {budget_value} by {users_dict[user_id]}. Error: {error}")
-#         bot.send_message(user_id, 'Введено неверное значение суммы...\nПопробуйте снова')
-#         bot.register_next_step_handler(message, set_budget)
 #
 #
 # def add_expenses(message: Message) -> None:

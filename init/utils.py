@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 
 def user_to_json(user) -> dict:
@@ -14,7 +15,7 @@ def user_to_json(user) -> dict:
         'budget': user[6],
         'start_date': user[7],
         'end_date': user[8],
-        'expense_history': user[9],
+        'expense_history': json.loads(user[9]) if user[9] else '',
     }
 
     return user_json
@@ -30,14 +31,33 @@ def get_days_count(start_date, end_date) -> list:
     return [start_date_str, end_date_str, days]
 
 
-def get_budget_info(chat_id, start_date, end_date, budget) -> bool:
+def get_budget_info(start_date, end_date, budget) -> bool:
     """ SET BUDGET FOR USER IN DB """
 
     budget_info = {
-        "days": (end_date - start_date).days + 1,
-        "daily_budget": budget / days,
+        "daily_budget": round(budget / ((end_date - start_date).days + 1), 2),
         "start_date_str": start_date.strftime('%d.%m.%Y'),
-        "end_date_str": end_date.strftime('%d.%m.%Y')
+        "end_date_str": end_date.strftime('%d.%m.%Y'),
+        "budget": budget,
     }
 
     return budget_info
+
+
+def get_expenses(user_info, budget_info) -> str:
+    """ CREATE AND FORMAT BUDGET INFO IN JSON AND ADD EXPENSES INFO """
+
+    if user_info["expense_history"] is None:
+        user_info["expense_history"] = list()
+
+    expense_dict = {
+        "id": len(user_info["expense_history"]),
+        "start_date": budget_info["start_date_str"],
+        "end_date": budget_info["end_date_str"],
+        "start_budget": budget_info["budget"],
+        "start_daily_budget": budget_info["daily_budget"],
+        "expenses": [],
+        "profits": []
+    }
+
+    return json.dumps(expense_dict)

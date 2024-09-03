@@ -31,6 +31,29 @@ def input_budget(start_date, end_date, days_count) -> str:
     return f"Введите сумму выделенного бюджета на период\nс *{start_date}* по *{end_date}* (*{days_count}* дней):"
 
 
+def success_save_budget(user: dict) -> str:
+    return (
+        f"Бюджет успешно установлен !\n\nНачало: *{user['start_date']}*\nКонец: *{user['end_date']}*\n"
+        f"Сумма бюджета: *{user['budget']}* RUB\nБюджет на день: *{user['daily_budget']}* RUB\n"
+    )
+
+
+def balance_message(user: dict) -> str:
+    start = datetime.now().date()
+    end = datetime.strptime(user['end_date'], "%d.%m.%Y").date()
+    days_count = (end - start).days + 1
+
+    return (
+        f"Сегодня: *{datetime.now().date().strftime('%d.%m.%Y')}*\n"
+        f"Информация о действующем периоде:\n\n"
+        f"Дата начала: *{user['start_date']}*\n"
+        f"Дата окончания: *{user['end_date']}*\n"
+        f"Осталось: *{days_count}* дней\n\n"
+        f"Остаток бюджета до конца периода:\n*{user['budget']}* _RUB_\n\n"
+        f"Актуальный бюджет на день: \n*{user['daily_budget']}* _RUB_"
+    )
+
+
 ######################################### WRONG MESSAGES ################################################
 def wrong_date() -> str:
     return f"Введенная дата не соответствует необходимому формату (*01.01.2024*)\nПопробуйте ввести дату заново: "
@@ -42,3 +65,7 @@ def wrong_date_early() -> str:
 
 def wrong_budget() -> str:
     return f"Вы ввели некорректную сумму.\nПопробуйе еще раз"
+
+
+def wrong_save_budget() -> str:
+    return f"Прошу прощения, к сожалению не удалось рассчитать и сохранить бюджет...\nПопробуйте позже"

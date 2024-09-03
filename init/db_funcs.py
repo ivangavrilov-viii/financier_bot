@@ -8,7 +8,6 @@ DB_NAME = config('db_name')
 admin_list = [int(config('admin_1'))]
 
 
-# UPDATE FUNCTIONS IN DB
 def update_in_db(execute_string, params_set, error_message):
     try:
         database = sqlite3.connect(DB_NAME)
@@ -27,23 +26,14 @@ def update_in_db(execute_string, params_set, error_message):
     return False
 
 
-# OPERATIONS WITH USERS TABLE
 def create_user_table():
     """ CREATE USER TABLE """
 
-    update_in_db("CREATE TABLE IF NOT EXISTS users("
-    "chat_id INTEGER, "
-    "role TEXT, "
-    "first_name TEXT, "
-    "last_name TEXT,  "
-    "username TEXT, "
-    "daily_budget REAL, "
-    "budget REAL, "
-    "start_date TEXT, "
-    "end_date TEXT, "
-    "expense_history TEXT);",
-    None,
-    "Error with creating user table"
+    update_in_db(
+        "CREATE TABLE IF NOT EXISTS users(chat_id INTEGER, role TEXT, first_name TEXT, last_name TEXT,  "
+        "username TEXT, daily_budget REAL, budget REAL, start_date TEXT, end_date TEXT, expense_history TEXT);",
+        None,
+        "Error with creating user table"
     )
 
 
@@ -56,24 +46,52 @@ def create_user(chat_message):
     role = 'admin' if user_id in admin_list else 'user'
 
     if not user_is_exist:
-        update_in_db("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                     (user_id, role, chat_message.first_name, chat_message.last_name, chat_message.username, 0.0, 0.0, None, None, None),
-                     "Error with creating new user in DB"
+        update_in_db(
+            "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, role, chat_message.first_name, chat_message.last_name, chat_message.username, 0.0, 0.0, None, None, None),
+            "Error with creating new user in DB"
         )
 
 
-def save_sport_for_user(chat_id, sport):
-    return update_in_db(
-        f"UPDATE users SET sport='{sport}' WHERE chat_id={chat_id}",
-        None,
-        f"ERROR | Error with update sport for user(#{chat_id})"
-    )
-
-
-def save_budget(chat_id, start_date, end_date, budget):
+def save_budget(chat_id, user_info, start_date, end_date, budget):
     """ SAVE BUDGET AND DATES FOR USER IN DB """
 
-    budget_info = u.get_budget_info(chat_id, start_date, end_date, budget)
+    budget_info = u.get_budget_info(start_date, end_date, budget)
+    expenses_history = u.get_expenses(user_info, budget_info)
+
+    daily_budget_response = update_in_db(
+        f"UPDATE users SET daily_budget={budget_info['daily_budget']} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update sport for user(#{chat_id})"
+    )
+
+    budget_response = update_in_db(
+        f"UPDATE users SET budget={budget_info['budget']} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update sport for user(#{chat_id})"
+    )
+
+    start_date_response = update_in_db(
+        f"UPDATE users SET start_date='{budget_info['start_date_str']}' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update sport for user(#{chat_id})"
+    )
+
+    end_date_response = update_in_db(
+        f"UPDATE users SET end_date='{budget_info['end_date_str']}' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update sport for user(#{chat_id})"
+    )
+
+    expenses_response = update_in_db(
+        f"UPDATE users SET expense_history='{expenses_history}' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update sport for user(#{chat_id})"
+    )
+
+    if not daily_budget_response or not budget_response or not start_date_response or not end_date_response or not expenses_response:
+        return False
+    return True
 
 
 def user_in_db(user_id):

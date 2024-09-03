@@ -62,31 +62,69 @@ def save_budget(chat_id, user_info, start_date, end_date, budget):
     daily_budget_response = update_in_db(
         f"UPDATE users SET daily_budget={budget_info['daily_budget']} WHERE chat_id={chat_id}",
         None,
-        f"Error with update sport for user(#{chat_id})"
+        f"Error with update daily_budget for user(#{chat_id})"
     )
 
     budget_response = update_in_db(
         f"UPDATE users SET budget={budget_info['budget']} WHERE chat_id={chat_id}",
         None,
-        f"Error with update sport for user(#{chat_id})"
+        f"Error with update budget for user(#{chat_id})"
     )
 
     start_date_response = update_in_db(
         f"UPDATE users SET start_date='{budget_info['start_date_str']}' WHERE chat_id={chat_id}",
         None,
-        f"Error with update sport for user(#{chat_id})"
+        f"Error with update start_date for user(#{chat_id})"
     )
 
     end_date_response = update_in_db(
         f"UPDATE users SET end_date='{budget_info['end_date_str']}' WHERE chat_id={chat_id}",
         None,
-        f"Error with update sport for user(#{chat_id})"
+        f"Error with update end_date for user(#{chat_id})"
     )
 
     expenses_response = update_in_db(
         f"UPDATE users SET expense_history='{expenses_history}' WHERE chat_id={chat_id}",
         None,
-        f"Error with update sport for user(#{chat_id})"
+        f"Error with update expense_history for user(#{chat_id})"
+    )
+
+    if not daily_budget_response or not budget_response or not start_date_response or not end_date_response or not expenses_response:
+        return False
+    return True
+
+
+def delete_history(chat_id):
+    """ DELETE ALL HISTORY AND LAST PERIOD FOR USER WITH chat_id """
+
+    daily_budget_response = update_in_db(
+        f"UPDATE users SET daily_budget={0.0} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update daily_budget for user(#{chat_id})"
+    )
+
+    budget_response = update_in_db(
+        f"UPDATE users SET budget={0.0} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update budget for user(#{chat_id})"
+    )
+
+    start_date_response = update_in_db(
+        f"UPDATE users SET start_date='' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update start_date for user(#{chat_id})"
+    )
+
+    end_date_response = update_in_db(
+        f"UPDATE users SET end_date='' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update end_date for user(#{chat_id})"
+    )
+
+    expenses_response = update_in_db(
+        f"UPDATE users SET expense_history='' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update expense_history for user(#{chat_id})"
     )
 
     if not daily_budget_response or not budget_response or not start_date_response or not end_date_response or not expenses_response:

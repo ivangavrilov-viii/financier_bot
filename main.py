@@ -1,4 +1,4 @@
-from telebot.types import Message
+from telebot.types import Message, CallbackQuery
 from datetime import datetime
 from decouple import config
 from loguru import logger
@@ -6,7 +6,7 @@ import telebot
 
 import init.messages as mes
 import init.db_funcs as db
-# import init.keyboards as k
+import init.keyboards as k
 import init.utils as u
 
 
@@ -31,8 +31,36 @@ def start(message: Message) -> None:
     elif message.text == '/balance':
         user = db.user_in_db(chat_id)
         bot.send_message(chat_id, mes.balance_message(user), parse_mode="Markdown")
+    elif message.text == '/period_history':
+        user = db.user_in_db(chat_id)
+        bot.send_message(chat_id, mes.history_message(user), parse_mode="Markdown")
+    elif message.text == '/clean_history':
+        user = db.user_in_db(chat_id)
+        if user["expense_history"]:
+            bot.send_message(chat_id, mes.clear_history_message(), reply_markup=k.clean_history(), parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, mes.empty_history_message(), parse_mode="Markdown")
     else:
         bot.send_message(chat_id, mes.function_list(), parse_mode="Markdown")
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call: CallbackQuery) -> None:
+    """ KEYBOARD HANDLER """
+
+    chat_id = call.message.chat.id
+    keyboard_command = call.data
+
+    if keyboard_command == "no_delete_history":
+        bot.send_message(chat_id, mes.no_clear_history_message(), parse_mode="Markdown")
+    elif keyboard_command == "delete_history":
+        user = db.user_in_db(chat_id)
+        delete_history = db.delete_history(user["chat_id"])
+        if delete_history:
+            bot.send_message(chat_id, mes.success_clear_history_message(), parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, mes.wrong_clear_history_message(), parse_mode="Markdown")
+    bot.delete_message(chat_id, call.message.message_id)
 
 
 def set_start_date(message: Message) -> None:

@@ -15,7 +15,7 @@ def user_to_json(user) -> dict:
         'budget': user[6],
         'start_date': user[7],
         'end_date': user[8],
-        'expense_history': json.loads(user[9]) if user[9] else '',
+        'expense_history': json.loads(user[9]) if user[9] else None,
     }
 
     return user_json
@@ -60,4 +60,6 @@ def get_expenses(user_info, budget_info) -> str:
         "profits": []
     }
 
-    return json.dumps(expense_dict)
+    user_info["expense_history"].append(expense_dict)
+
+    return json.dumps(user_info["expense_history"])

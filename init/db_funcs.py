@@ -2,6 +2,7 @@ from decouple import config
 from loguru import logger
 import init.utils as u
 import sqlite3
+import json
 
 
 DB_NAME = config('db_name')
@@ -170,3 +171,68 @@ def get_user_role(chat_id):
     user = user_in_db(chat_id)
     user_role = user["role"] if user else None
     return user_role
+
+
+def add_expense(chat_id, expense_value, expense_comment, today):
+    """ ADD EXPENSE IN DB AND CALCULATE BUDGER AND DAILY BUDGET """
+
+    user = user_in_db(chat_id)
+    updated_user = u.add_expense(user, expense_value, expense_comment, today)
+    expense_history = json.dumps(updated_user["expense_history"])
+
+    budget_response = update_in_db(
+        f"UPDATE users SET budget={updated_user['budget']} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update budget for user(#{chat_id})"
+    )
+
+    expenses_response = update_in_db(
+        f"UPDATE users SET expense_history='{expense_history}' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update expense_history for user(#{chat_id})"
+    )
+
+    if not budget_response or not expenses_response:
+        return False
+    return True
+
+
+def add_profit(chat_id, profit_value, profit_comment, today):
+    """ ADD EXPENSE IN DB AND CALCULATE BUDGER AND DAILY BUDGET """
+
+    user = user_in_db(chat_id)
+    updated_user = u.add_profit(user, profit_value, profit_comment, today)
+    expense_history = json.dumps(updated_user["expense_history"])
+
+    budget_response = update_in_db(
+        f"UPDATE users SET budget={updated_user['budget']} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update budget for user(#{chat_id})"
+    )
+
+    expenses_response = update_in_db(
+        f"UPDATE users SET expense_history='{expense_history}' WHERE chat_id={chat_id}",
+        None,
+        f"Error with update expense_history for user(#{chat_id})"
+    )
+
+    if not budget_response or not expenses_response:
+        return False
+    return True
+
+
+def update_daily_budget(user):
+    """ UPDATE NEW DAILY BUDGET FOR USER IN DB """
+
+    new_daily_budget = u.calculate_daily_budget(user)
+    chat_id = user["chat_id"]
+
+    daily_budget_response = update_in_db(
+        f"UPDATE users SET daily_budget={new_daily_budget} WHERE chat_id={chat_id}",
+        None,
+        f"Error with update daily_budget for user(#{chat_id})"
+    )
+
+    if not daily_budget_response:
+        return False
+    return True

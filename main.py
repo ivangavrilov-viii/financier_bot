@@ -40,6 +40,26 @@ def start(message: Message) -> None:
             bot.send_message(chat_id, mes.clear_history_message(), reply_markup=k.clean_history(), parse_mode="Markdown")
         else:
             bot.send_message(chat_id, mes.empty_history_message(), parse_mode="Markdown")
+    elif message.text == '/add_expense':
+        user = db.user_in_db(chat_id)
+        if user['start_date']:
+            bot.send_message(chat_id, mes.input_expense_value(), parse_mode="Markdown")
+            bot.register_next_step_handler(message, add_expense)
+        else:
+            bot.send_message(chat_id, mes.no_active_period(), parse_mode="Markdown")
+    elif message.text == '/add_profit':
+        user = db.user_in_db(chat_id)
+        if user['start_date']:
+            bot.send_message(chat_id, mes.input_profit_value(), parse_mode="Markdown")
+            bot.register_next_step_handler(message, add_profit)
+        else:
+            bot.send_message(chat_id, mes.no_active_period(), parse_mode="Markdown")
+    elif message.text == '/update_budget':
+        user = db.user_in_db(chat_id)
+        if user['start_date']:
+            bot.send_message(chat_id, mes.update_daily_budget(), reply_markup=k.update_daily_budget(), parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, mes.no_active_period(), parse_mode="Markdown")
     else:
         bot.send_message(chat_id, mes.function_list(), parse_mode="Markdown")
 
@@ -53,6 +73,16 @@ def callback_worker(call: CallbackQuery) -> None:
 
     if keyboard_command == "no_delete_history":
         bot.send_message(chat_id, mes.no_clear_history_message(), parse_mode="Markdown")
+    elif keyboard_command == "no_update_daily":
+        bot.send_message(chat_id, mes.no_update_daily_budget(), parse_mode="Markdown")
+    elif keyboard_command == "update_daily":
+        user = db.user_in_db(chat_id)
+        update_daily_budget = db.update_daily_budget(user)
+        if update_daily_budget:
+            bot.send_message(chat_id, mes.success_update_daily_budget_message(), parse_mode="Markdown")
+            bot.send_message(chat_id, mes.balance_message(user), parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, mes.wrong_update_daily_budget_message(), parse_mode="Markdown")
     elif keyboard_command == "delete_history":
         user = db.user_in_db(chat_id)
         delete_history = db.delete_history(user["chat_id"])
@@ -70,9 +100,14 @@ def set_start_date(message: Message) -> None:
     chat_id = message.chat.id
 
     try:
+        today = datetime.now().date()
         start = datetime.strptime(start_date, "%d.%m.%Y").date()
-        bot.send_message(chat_id, mes.input_end_date(), parse_mode="Markdown")
-        bot.register_next_step_handler(message, set_end_date, start)
+        if today > start:
+            bot.send_message(chat_id, mes.wrong_date_today(), parse_mode="Markdown")
+            bot.register_next_step_handler(message, set_start_date)
+        else:
+            bot.send_message(chat_id, mes.input_end_date(), parse_mode="Markdown")
+            bot.register_next_step_handler(message, set_end_date, start)
     except Exception as error:
         logger.error(f'Error with input start date: {error}')
         bot.send_message(chat_id, mes.wrong_date(), parse_mode="Markdown")
@@ -119,81 +154,60 @@ def set_budget(message: Message, start_date, end_date) -> None:
         bot.register_next_step_handler(message, set_budget, start_date, end_date)
 
 
-#     elif message.text == '/add_expenses':
-#         if users_dict[message.chat.id].period_budget != 0 and users_dict[message.chat.id].period_budget:
-#             bot.send_message(message.chat.id, add_expenses_msg())
-#             bot.register_next_step_handler(message, add_expenses)
-#         else:
-#             bot.send_message(message.chat.id, input_budget())
-#             bot.register_next_step_handler(message, set_budget)
-#     elif message.text == '/add_profit':
-#         bot.send_message(message.chat.id, add_profit_msg())
-#         bot.register_next_step_handler(message, add_profit)
-#     elif message.text == '/period_history':
-#         user = users_dict[message.chat.id]
-#         bot.send_message(message.chat.id, user.period_history())
-#     else:
-#         bot.send_message(message.chat.id, function_list())
-#
-#
-# def add_expenses(message: Message) -> None:
-#     expenses_value = message.text
-#     user_id = message.chat.id
-#     user = users_dict[user_id]
-#     today = str(datetime.now().date().strftime('%d.%m.%Y'))
-#
-#     try:
-#         print(user.expenses_history.keys())
-#         print(today)
-#         if today in user.expenses_history.keys():
-#             user.expenses_history[today]['value'] += float(expenses_value)
-#             user.period_budget -= float(expenses_value)
-#         else:
-#             user.expenses_history[today] = dict()
-#             user.expenses_history[today]['value'] = float(expenses_value)
-#             user.period_budget -= float(expenses_value)
-#         user.set_day_budget()
-#         bot.send_message(user_id, add_expenses_add_comment())
-#         bot.register_next_step_handler(message, add_expenses_comment)
-#     except Exception as error:
-#         logger.error(f"Wrong input expenses value = {expenses_value} by {user}. Error: {error}")
-#         bot.send_message(user_id, 'Введено неверная сумма трат...\nПопробуйте снова')
-#         bot.register_next_step_handler(message, add_expenses)
-#
-#
-# def add_expenses_comment(message: Message) -> None:
-#     expenses_comment = message.text
-#     user_id = message.chat.id
-#     user = users_dict[user_id]
-#     today = str(datetime.now().date().strftime('%d.%m.%Y'))
-#
-#     try:
-#         if 'comment' in user.expenses_history[today].keys():
-#             user.expenses_history[today]['comment'] += f"{expenses_comment}\n"
-#         else:
-#             user.expenses_history[today]['comment'] = f"{expenses_comment}\n"
-#         bot.send_message(user_id, add_expenses_success())
-#         bot.send_message(message.chat.id, balance(user.period_budget, user.day_budget, user.start_period_date, user.end_period_date))
-#     except Exception as error:
-#         logger.error(f"Wrong input expenses value = {expenses_comment} by {user}. Error: {error}")
-#         bot.send_message(user_id, 'Некорректный ввод...\nПопробуйте снова')
-#         bot.register_next_step_handler(message, add_expenses_comment)
-#
-#
-# def add_profit(message: Message) -> None:
-#     profit_value = message.text
-#     user_id = message.chat.id
-#     user = users_dict[user_id]
-#
-#     try:
-#         user.period_budget += float(profit_value)
-#         user.set_day_budget()
-#         bot.send_message(user_id, add_profit_success())
-#         bot.send_message(message.chat.id, balance(user.period_budget, user.day_budget, user.start_period_date, user.end_period_date))
-#     except Exception as error:
-#         logger.error(f"Wrong input profit value = {profit_value} by {user}. Error: {error}")
-#         bot.send_message(user_id, 'Введено неверная сумма прибыли...\nПопробуйте снова')
-#         bot.register_next_step_handler(message, add_profit)
+def add_expense(message: Message) -> None:
+    """ CHECK EXPENSE VALUE FOR USER """
+
+    expense_value = message.text
+    chat_id = message.chat.id
+
+    if expense_value.isdigit() and float(expense_value) > 0:
+        bot.send_message(chat_id, mes.input_expense_comment(), parse_mode="Markdown")
+        bot.register_next_step_handler(message, add_expense_comment, float(expense_value))
+    else:
+        bot.send_message(chat_id, mes.wrong_expense_value(), parse_mode="Markdown")
+        bot.send_message(chat_id, mes.function_list(), parse_mode="Markdown")
+
+
+def add_expense_comment(message: Message, expense_value: float) -> None:
+    """ ADD EXPENSE IN HISTORY FOR USER """
+
+    expense_comment = message.text
+    chat_id = message.chat.id
+    today_date = str(datetime.now().date().strftime('%d.%m.%Y'))
+
+    add_response = db.add_expense(chat_id, expense_value, expense_comment, today_date)
+    if add_response:
+        bot.send_message(chat_id, mes.success_add_expense(), parse_mode="Markdown")
+    else:
+        bot.send_message(chat_id, mes.wrong_add_expense(), parse_mode="Markdown")
+
+
+def add_profit(message: Message) -> None:
+    """ CHECK PROFIT VALUE FOR USER """
+
+    profit_value = message.text
+    chat_id = message.chat.id
+
+    if profit_value.isdigit() and float(profit_value) > 0:
+        bot.send_message(chat_id, mes.input_profit_comment(), parse_mode="Markdown")
+        bot.register_next_step_handler(message, add_profit_comment, float(profit_value))
+    else:
+        bot.send_message(chat_id, mes.wrong_expense_value(), parse_mode="Markdown")
+        bot.send_message(chat_id, mes.function_list(), parse_mode="Markdown")
+
+
+def add_profit_comment(message: Message, profit_value: float) -> None:
+    """ ADD EXPENSE IN HISTORY FOR USER """
+
+    profit_comment = message.text
+    chat_id = message.chat.id
+    today_date = str(datetime.now().date().strftime('%d.%m.%Y'))
+
+    add_response = db.add_profit(chat_id, profit_value, profit_comment, today_date)
+    if add_response:
+        bot.send_message(chat_id, mes.success_add_profit(), parse_mode="Markdown")
+    else:
+        bot.send_message(chat_id, mes.wrong_add_profit(), parse_mode="Markdown")
 
 
 if __name__ == '__main__':

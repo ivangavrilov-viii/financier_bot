@@ -63,3 +63,45 @@ def get_expenses(user_info, budget_info) -> str:
     user_info["expense_history"].append(expense_dict)
 
     return json.dumps(user_info["expense_history"])
+
+
+def add_expense(user, expense_value, expense_comment, today):
+    """ ADD EXPENSE IN USER DICT """
+
+    user["budget"] -= expense_value
+    last_period = user['expense_history'][-1]
+    expense_id = len(last_period["expenses"])
+
+    last_period["expenses"].append({
+        "id": expense_id,
+        "date": today,
+        "price": expense_value,
+        "comment": expense_comment
+    })
+    return user
+
+
+def add_profit(user, profit_value, profit_comment, today):
+    """ ADD EXPENSE IN USER DICT """
+
+    user["budget"] += profit_value
+    last_period = user['expense_history'][-1]
+    profit_id = len(last_period["profits"])
+
+    last_period["profits"].append({
+        "id": profit_id,
+        "date": today,
+        "price": profit_value,
+        "comment": profit_comment
+    })
+    return user
+
+
+def calculate_daily_budget(user):
+    """ CALCULATE NEW DAILY BUDGET """
+
+    end_date = datetime.strptime(user["end_date"], "%d.%m.%Y").date()
+    days_count = (end_date - datetime.now().date()).days + 1
+    new_daily_budget = user["budget"] / days_count
+
+    return round(new_daily_budget, 2)
